@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026년 국가두마 예측</title>
+    <title>2026년 러시아 국가두마 선거 시뮬레이터</title>
 
     <!-- Tailwind CSS for basic structure -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -35,7 +35,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: url('https://flexible.img.hani.co.kr/flexible/normal/970/649/imgdb/original/2024/1024/20241024502980.jpg');
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/f/f8/State_Duma_building_in_Moscow_2021.jpg');
             background-size: cover;
             background-position: center;
             filter: blur(8px) grayscale(30%);
@@ -190,7 +190,7 @@
 <body>
     <div class="background-image-blur"></div>
     <div class="content-wrapper">
-        <h2>🗳️ 2026년 러시아 국가두마 예측</h2>
+        <h2>🗳️ 2026년 러시아 국가두마 선거</h2>
 
         <div class="party-grid" id="partyGrid">
             <!-- Party input cards will be rendered here by JS -->
@@ -308,6 +308,7 @@
             Object.keys(PARTIES).forEach(key => { finalSeats[key] = 0; });
 
             // --- Step 1: Proportional Representation Seats (225 seats) ---
+            // 비례대표 의석은 5% 봉쇄 조항을 통과한 정당에만 배분됩니다.
             const eligibleParties = {};
             Object.keys(currentShares).forEach(key => {
                 if (currentShares[key] >= ELECTION_THRESHOLD) {
@@ -320,19 +321,15 @@
             });
 
             // --- Step 2: Constituency Seats (225 seats) ---
+            // 지역구 의석은 득표율 5% 제한 없이 모든 정당에 배분될 수 있습니다.
+            // 현실을 반영하여, 통합 러시아(여당)가 지역구에서 갖는 조직적 우세를 가중치로 부여합니다.
             const constituencyVotePool = { ...currentShares };
-            const urAdvantage = 150; 
-            finalSeats['ur'] += urAdvantage;
-            
-            const remainingConstituencySeats = CONSTITUENCY_SEATS - urAdvantage;
-            const remainingVotePool = {};
-            Object.keys(constituencyVotePool).forEach(key => {
-                if (key !== 'ur') remainingVotePool[key] = constituencyVotePool[key];
-            });
+            const urAdvantageMultiplier = 2.5; 
+            constituencyVotePool['ur'] *= urAdvantageMultiplier;
 
-            const remainingSeatsAllocation = allocateSeats(remainingVotePool, remainingConstituencySeats);
-            Object.keys(remainingSeatsAllocation).forEach(key => {
-                finalSeats[key] += remainingSeatsAllocation[key];
+            const constituencySeats = allocateSeats(constituencyVotePool, CONSTITUENCY_SEATS);
+            Object.keys(constituencySeats).forEach(key => {
+                finalSeats[key] += constituencySeats[key];
             });
 
             // --- Step 3: Update UI ---
