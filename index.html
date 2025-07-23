@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026년 러시아 국가두마 선거 시뮬레이터</title>
+
+    <!-- Tailwind CSS for basic structure -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        /* Custom Font */
+        @font-face {
+            font-family: 'Paperlogy-8ExtraBold';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-8ExtraBold.woff2') format('woff2');
+            font-weight: 500;
+            font-style: normal;
+        }
+
+        /* Global Styles */
+        body {
+            font-family: 'Paperlogy-8ExtraBold', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+        
+        /* Blurred background image */
+        .background-image-blur {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/f/f8/State_Duma_building_in_Moscow_2021.jpg');
+            background-size: cover;
+            background-position: center;
+            filter: blur(8px) grayscale(30%);
+            transform: scale(1.1);
+            z-index: -1;
+        }
+
+        /* Main container */
+        .content-wrapper {
+            width: 100%;
+            max-width: 800px;
+            background-color: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 1.75rem;
+            color: #333;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Party input cards */
+        .party-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .party-card {
+            width: 100%;
+            height: 130px;
+            border-radius: 12px;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            text-align: center;
+            padding: 0.5rem;
+        }
+
+        .party-card input {
+            font-family: 'Paperlogy-8ExtraBold', sans-serif;
+            width: 70px;
+            text-align: center;
+            font-size: 1.5rem;
+            margin: 0.25rem 0;
+            border-radius: 4px;
+            border: none;
+            padding: 4px;
+            color: rgba(255, 255, 255, 0.9);
+            background-color: transparent;
+            border-bottom: 2px solid rgba(255,255,255,0.5);
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .party-card input:focus {
+            color: white;
+            border-bottom-color: white;
+            outline: none;
+        }
+        
+        .party-card small {
+            font-size: 0.75rem;
+            opacity: 0.9;
+            line-height: 1.2;
+        }
+
+        /* Calculate Button */
+        .calculate-button {
+            font-family: 'Paperlogy-8ExtraBold', sans-serif;
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.25rem;
+            background: #00529F; /* United Russia Blue */
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .calculate-button:hover {
+            background: #003c75;
+        }
+
+        /* Results Section */
+        .results-container {
+            margin-top: 2.5rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            visibility: hidden;
+        }
+        .results-container.visible {
+            opacity: 1;
+            transform: translateY(0);
+            visibility: visible;
+        }
+
+        .seat-projection-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        .projection-party-card {
+            width: 100%;
+            height: 120px;
+            border-radius: 12px;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            text-align: center;
+            padding: 10px;
+        }
+
+        .projection-party-name { font-size: 1.1em; margin-bottom: 5px; }
+        .projection-seats { font-size: 2.5em; line-height: 1; }
+
+        /* Bar Chart */
+        .seat-bar-container {
+            width: 100%;
+            height: 30px;
+            background-color: #e5e7eb;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 2rem;
+            display: flex;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+        }
+
+        .seat-bar-segment {
+            height: 100%;
+            transition: width 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-image-blur"></div>
+    <div class="content-wrapper">
+        <h2>🗳️ 2026년 러시아 국가두마 선거</h2>
+
+        <div class="party-grid" id="partyGrid">
+            <!-- Party input cards will be rendered here by JS -->
+        </div>
+
+        <button class="calculate-button" onclick="runPrediction()">결과 계산</button>
+
+        <div id="resultsContainer" class="results-container">
+            <h2 id="resultsTitle" style="font-size: 1.5rem;">예상 의석수 (총 450석)</h2>
+            <div class="seat-projection-grid" id="seatProjectionGrid"></div>
+            <div class="seat-bar-container" id="seatBarContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const PARTIES = {
+            'ur': { name: '통합 러시아', color: '#00529F' },
+            'cprf': { name: '공산당', color: '#DA291C' },
+            'ldpr': { name: '자유민주당', color: '#0072B8' },
+            'srzp': { name: '정의 러시아', color: '#FFC72C' },
+            'np': { name: '새로운 사람들', color: '#00B0B9' },
+            'rppsj': { name: '러시아 연금당', color: '#9D2235' },
+            'yabloko': { name: '야블로코', color: '#008000' },
+            'cr': { name: '러시아의 공산주의자들', color: '#A40000' },
+            'greens': { name: '녹색당', color: '#006400' },
+            'rodina': { name: '조국', color: '#E41E26' },
+            'rpfj': { name: '자유정의당', color: '#8B0000' },
+            'ga': { name: '녹색 대안', color: '#00FF00' },
+            'cp': { name: '시민 연단', color: '#4B0082' },
+            'oth': { name: '기타/무소속', color: '#8D8D8D' }
+        };
+        
+        const PROPORTIONAL_SEATS = 225;
+        const CONSTITUENCY_SEATS = 225;
+        const TOTAL_SEATS = PROPORTIONAL_SEATS + CONSTITUENCY_SEATS;
+        const ELECTION_THRESHOLD = 5.0; // 5%
+
+        // Based on provided image and recent trends
+        const INITIAL_VOTE_SHARES = { 
+            ur: 33.3, 
+            cprf: 10.2, 
+            ldpr: 11.1, 
+            srzp: 3.9, 
+            np: 6.2,
+            rppsj: 1.0,
+            yabloko: 1.0,
+            cr: 0.5,
+            greens: 1.0,
+            rodina: 10.4,
+            rpfj: 0.5,
+            ga: 0.5,
+            cp: 0.5,
+            oth: 19.9 // Remainder
+        };
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderPartyCards();
+        });
+
+        // --- UI SETUP ---
+        function renderPartyCards() {
+            const grid = document.getElementById("partyGrid");
+            grid.innerHTML = "";
+            Object.keys(PARTIES).forEach(key => {
+                const party = PARTIES[key];
+                const card = document.createElement("div");
+                card.className = "party-card";
+                card.style.backgroundColor = party.color;
+                
+                if (['srzp', 'ga'].includes(key)) {
+                    card.style.color = '#333';
+                    card.innerHTML = `<div>${party.name}</div><input type="number" id="${key}-vote" value="${INITIAL_VOTE_SHARES[key]}" step="0.1" style="color: #333; border-bottom-color: rgba(0,0,0,0.4);"><small>정당 득표율(%)</small>`;
+                } else {
+                    card.innerHTML = `<div>${party.name}</div><input type="number" id="${key}-vote" value="${INITIAL_VOTE_SHARES[key]}" step="0.1"><small>정당 득표율(%)</small>`;
+                }
+                grid.appendChild(card);
+            });
+        }
+        
+        function allocateSeats(voteShares, numSeats) {
+            const seats = {};
+            const remainders = {};
+            let allocatedSeats = 0;
+            const totalVotes = Object.values(voteShares).reduce((a, b) => a + b, 0);
+
+            if (totalVotes === 0) return seats;
+
+            Object.keys(voteShares).forEach(key => {
+                const exactSeats = (voteShares[key] / totalVotes) * numSeats;
+                seats[key] = Math.floor(exactSeats);
+                remainders[key] = exactSeats - seats[key];
+                allocatedSeats += seats[key];
+            });
+
+            let remainingSeats = numSeats - allocatedSeats;
+            if (remainingSeats > 0) {
+                const sortedRemainders = Object.keys(remainders).sort((a, b) => remainders[b] - remainders[a]);
+                for (let i = 0; i < remainingSeats; i++) {
+                    seats[sortedRemainders[i]]++;
+                }
+            }
+            return seats;
+        }
+
+        // --- CORE LOGIC & UI UPDATE ---
+        function runPrediction() {
+            const currentShares = {};
+            Object.keys(PARTIES).forEach(key => {
+                currentShares[key] = parseFloat(document.getElementById(`${key}-vote`).value) || 0;
+            });
+
+            const finalSeats = {};
+            Object.keys(PARTIES).forEach(key => { finalSeats[key] = 0; });
+
+            // --- Step 1: Proportional Representation Seats (225 seats) ---
+            const eligibleParties = {};
+            Object.keys(currentShares).forEach(key => {
+                if (currentShares[key] >= ELECTION_THRESHOLD) {
+                    eligibleParties[key] = currentShares[key];
+                }
+            });
+            const proportionalSeats = allocateSeats(eligibleParties, PROPORTIONAL_SEATS);
+            Object.keys(proportionalSeats).forEach(key => {
+                finalSeats[key] += proportionalSeats[key];
+            });
+
+            // --- Step 2: Constituency Seats (225 seats) ---
+            const constituencyVotePool = { ...currentShares };
+            const urAdvantage = 150; 
+            finalSeats['ur'] += urAdvantage;
+            
+            const remainingConstituencySeats = CONSTITUENCY_SEATS - urAdvantage;
+            const remainingVotePool = {};
+            Object.keys(constituencyVotePool).forEach(key => {
+                if (key !== 'ur') remainingVotePool[key] = constituencyVotePool[key];
+            });
+
+            const remainingSeatsAllocation = allocateSeats(remainingVotePool, remainingConstituencySeats);
+            Object.keys(remainingSeatsAllocation).forEach(key => {
+                finalSeats[key] += remainingSeatsAllocation[key];
+            });
+
+            // --- Step 3: Update UI ---
+            const resultsContainer = document.getElementById('resultsContainer');
+            const seatProjectionGrid = document.getElementById('seatProjectionGrid');
+            const seatBarContainer = document.getElementById('seatBarContainer');
+            seatProjectionGrid.innerHTML = '';
+            seatBarContainer.innerHTML = '';
+
+            const sortedParties = Object.keys(finalSeats).sort((a,b) => finalSeats[b] - finalSeats[a]);
+
+            sortedParties.forEach(key => {
+                const party = PARTIES[key];
+                const seats = finalSeats[key];
+                if (seats === 0) return;
+                
+                const resultCard = document.createElement("div");
+                resultCard.className = "projection-party-card";
+                resultCard.style.backgroundColor = party.color;
+                if (['srzp', 'ga'].includes(key)) resultCard.style.color = '#333';
+
+                resultCard.innerHTML = `<div class="projection-party-name">${party.name}</div><div class="projection-seats">${seats}</div>`;
+                seatProjectionGrid.appendChild(resultCard);
+
+                const segment = document.createElement('div');
+                segment.className = 'seat-bar-segment';
+                segment.style.backgroundColor = party.color;
+                segment.style.width = `${(seats / TOTAL_SEATS) * 100}%`;
+                
+                seatBarContainer.appendChild(segment);
+            });
+            
+            resultsContainer.classList.add('visible');
+        }
+    </script>
+</body>
+</html>
